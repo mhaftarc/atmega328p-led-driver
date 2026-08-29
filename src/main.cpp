@@ -10,11 +10,20 @@
 } State_t;
 
 volatile State_t currentstate = MODE_OFF;
+volatile uint8_t debounceTimer = 0;
+
+
+void timer0_init(void){
+    TCCR0A |= (1 << WGM01);
+    TCCR0B |= (1 << CS01) | (1 << CS00);
+    OCR0A = 249;
+    TIMSK0 |= (1 << OCIE0A);
+};
 
 ISR(INT0_vect){
 
-    if(!(PIND & (1 << PD2))){
-            _delay_ms(30);
+    if(debounceTimer == 0){
+        debounceTimer = 30;
             switch(currentstate){
                 case MODE_OFF:
                 currentstate = MODE_ON;
@@ -34,13 +43,18 @@ ISR(INT0_vect){
 };
 ISR(INT1_vect){
     
-    if(!(PIND & (1 << PD3))){
-        _delay_ms(30);
+    if(debounceTimer == 0){
+        debounceTimer = 30;
         currentstate = MODE_OFF;
-        PORTB &= ~(1 << PB5);
     }
 
+};
+ISR(TIMER0_COMPA_vect) {
+    if (debounceTimer > 0) {
+        debounceTimer--;
+    }
 }
+
 
 
 
@@ -64,7 +78,9 @@ int main(void) {
     EIMSK |= (1 << INT0);
     EIMSK |= (1 << INT1);
     
+    timer0_init();
     sei();
+    
 
     while (1) {
          
