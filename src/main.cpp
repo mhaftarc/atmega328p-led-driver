@@ -13,7 +13,7 @@ volatile State_t currentstate = MODE_OFF;
 
 ISR(INT0_vect){
 
-    if(!(PINB & (1 << PB0))){
+    if(!(PIND & (1 << PD2))){
             _delay_ms(30);
             switch(currentstate){
                 case MODE_OFF:
@@ -27,10 +27,19 @@ ISR(INT0_vect){
                 break;
                 case MODE_STROBE:
                 currentstate = MODE_OFF;
-                break;
+                break;  
             }
     };
     
+};
+ISR(INT1_vect){
+    
+    if(!(PIND & (1 << PD3))){
+        _delay_ms(30);
+        currentstate = MODE_OFF;
+        PORTB &= ~(1 << PB5);
+    }
+
 }
 
 
@@ -40,12 +49,21 @@ ISR(INT0_vect){
 
 int main(void) {
 
-   
-
-
-    DDRB &= ~(1 << PB0);
+    //wejscia i wyjscia
+    DDRD &= ~(1 << PD3); 
+    DDRD &= ~(1 << PD2);
     DDRB |= (1 << PB5);
-    PORTB |= (1 << PB0);
+
+    // pull up rezystory
+    PORTD |= (1 << PD2);
+    PORTD |= (1 << PD3);
+
+    //interupts maski
+    EICRA |= (1 << ISC11);
+    EICRA |= (1 << ISC01);
+    EIMSK |= (1 << INT0);
+    EIMSK |= (1 << INT1);
+    
     sei();
 
     while (1) {
