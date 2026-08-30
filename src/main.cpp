@@ -1,6 +1,5 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <util/delay.h>
 
  typedef enum {
     MODE_OFF,
@@ -12,21 +11,32 @@
 
 volatile State_t currentstate = MODE_OFF;
 volatile uint8_t debounceTimer = 0;
-volatile uint16_t ledTimer = 0;
+volatile uint32_t systemMillis = 0;
 
 
 void timer0_init(void){
-    TCCR0A |= (1 << WGM01);
+    TCCR0A |= (1 << WGM01);         
     TCCR0B |= (1 << CS01) | (1 << CS00);
     OCR0A = 249;
     TIMSK0 |= (1 << OCIE0A);
-};
+}
 
-void timer1_init(void) {
-    TCCR1A |= (1 << COM1A1) | (1 << WGM10);
-    TCCR1B |= (1 << WGM12) | (1 << CS11) | (1 << CS10);
-    OCR1A = 0; 
-};
+void timer1_pwm(void){
+    TCCR1A |= ((1 << COM1A1) | (1 << WGM11) | (1 << WGM10));
+    TCCR1B |= ((1 << WGM12) | (1 << CS11) | (1 << CS10));
+}
+
+void adc_init(void){
+    ADMUX |= ((1 << REFS0) | (1 << MUX1)); // the voltage reference and pin choose
+    ADCSRA |= ((1 << ADEN) | (1 << ADPS0) | (1 << ADPS1) | (1 << ADPS2)); // ADC turning on and prescaler
+}
+
+
+uint16_t adc_measure(void){
+    ADCSRA |= (1 << ADSC); // measure start
+    while(ADCSRA & (1 << ADSC));
+    return ADC;
+}
 
 ISR(INT0_vect){
 
@@ -44,9 +54,10 @@ ISR(INT0_vect){
                 break;
                 case MODE_STROBE:
                 currentstate = MODE_BREATHING;
-                break; 
+                break;  
                 case MODE_BREATHING:
                 currentstate = MODE_OFF;
+                break;
             }
     };
     
@@ -60,18 +71,12 @@ ISR(INT1_vect){
 
 };
 ISR(TIMER0_COMPA_vect) {
+    systemMillis++;
+
     if (debounceTimer > 0) {
         debounceTimer--;
     }
-    if(ledTimer > 0){
-        ledTimer--;
-    }
 }
-
-
-
-
-
 
 
 int main(void) {
@@ -91,46 +96,72 @@ int main(void) {
     EIMSK |= (1 << INT0);
     EIMSK |= (1 << INT1);
     
+    adc_init();
     timer0_init();
-    timer1_init();
+    timer1_pwm();
     sei();
     
-    uint8_t brightness = 0;
-    int8_t fadeAmount = 5;
 
     while (1) {
          
             switch(currentstate){
                 case MODE_OFF:
-                PORTB &= ~(1 << PB1);
+                OCR1A = 0;
                 break;
-                case MODE_ON:
-                PORTB |= (1 << PB1);
-                break;
-                case MODE_SLOW:
-                    if(ledTimer == 0){
-                        PORTB ^= (1 << PB1);
-                        ledTimer = 500;
-                    }
-                break;
-                case MODE_STROBE:
-                    if(ledTimer == 0){
-                        PORTB ^= (1 << PB1);
-                        ledTimer = 50;
-                    }
-                break;
-                case MODE_BREATHING:
-                if (ledTimer == 0) {
-                    brightness += fadeAmount;
-                    OCR1A = brightness;
 
-                    // Zmiana kierunku po osiągnięciu krańców zakresu
-                    if (brightness == 0 || brightness == 255) {
-                        fadeAmount = -fadeAmount;
-                    }
-                    ledTimer = 15;       // Krok płynności co 15 ms
-                }
+                case MODE_ON:
+                OCR1A = adc_measure();
                 break;
+
+                case MODE_SLOW:{
+                static uint32_t lastSwitch = 0;  // used static instead od global variable to prevent messing up variables, static remembers the state in the loop here
+                static uint8_t ledState = 0;
+
+                if(systemMillis - lastSwitch >=500){
+                    lastSwitch = systemMillis;
+                    ledState = !ledState;
+
+                    OCR1A = ledState ? adc_measure() : 0;
+                }
+                break;}
+
+                case MODE_STROBE:{
+                static uint32_t lastSwitch = 0;  
+                static uint8_t ledState = 0;
+
+                if(systemMillis - lastSwitch >=50){
+                    lastSwitch = systemMillis;
+                    ledState = !ledState;
+
+                    OCR1A = ledState ? adc_measure() : 0;
+                }} break;
+
+                case MODE_BREATHING:{
+                static uint16_t brightness = 0;
+                static uint32_t lastUpdate = 0;
+                static uint8_t direction = 0;
+                if(systemMillis - lastUpdate >= 10){
+                    lastUpdate = systemMillis;
+                    if(direction == 0){
+                        if(brightness >= 1018){
+                            brightness = 1023;
+                            direction = 1;
+                        }else {
+                            brightness += 5;
+                        }
+                       
+                    }else {
+                        if(brightness <= 5){
+                            brightness = 0;
+                            direction = 0;
+                        }
+                        else{
+                            brightness -= 5;
+                        }
+                    }
+                    OCR1A = brightness;
+                }    
+                }    break;
     }
 
 } }
