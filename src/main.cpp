@@ -1,5 +1,6 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <stdio.h>
 
  typedef enum {
     MODE_OFF,
@@ -12,6 +13,8 @@
 volatile State_t currentstate = MODE_OFF;
 volatile uint8_t debounceTimer = 0;
 volatile uint32_t systemMillis = 0;
+char buffer[20];
+volatile uint8_t index, message_ready = 0;
 
 
 void timer0_init(void){
@@ -30,6 +33,21 @@ void adc_init(void){
     ADMUX |= ((1 << REFS0) | (1 << MUX1)); // the voltage reference and pin choose
     ADCSRA |= ((1 << ADEN) | (1 << ADPS0) | (1 << ADPS1) | (1 << ADPS2)); // ADC turning on and prescaler
 }
+
+void uart_init(void){
+    UCSR0B |= ((1 << RXEN0) | (1 << RXCIE0) | (1 << TXEN0)); // tx rx enable
+    UBRR0 = 103; // baud rate
+    UCSR0C |= ((1 << UCSZ01) | (1 << UCSZ00)); // 8n1 format
+
+}
+
+void uart_transmit(char data){
+    while(!(UCSR0A & (1 << UDRE0))){
+    }
+    UDR0 = data;
+}
+
+
 
 
 uint16_t adc_measure(void){
@@ -114,6 +132,19 @@ ISR(TIMER0_COMPA_vect) {
     }
 }
 
+ISR(USART_RX_vect){
+    
+    buffer[index] = UDR0;
+    if(buffer[index] == '\n'){
+        message_ready = 1;
+        buffer[index] = '\0';
+        index = 0;
+    }else{
+    index++;
+    }
+
+}
+
 
 int main(void) {
 
@@ -140,6 +171,7 @@ int main(void) {
     adc_init();
     timer0_init();
     timer1_pwm();
+    uart_init();
     sei();
     
 
@@ -205,4 +237,18 @@ int main(void) {
                 }    break;
     }
 
-} }
+    if(message_ready == 1){
+    printf("%s", buffer);
+    message_ready = 0;
+}
+
+}
+
+
+
+
+
+
+
+
+}
