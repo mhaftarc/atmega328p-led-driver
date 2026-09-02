@@ -16,6 +16,7 @@ volatile uint8_t debounceTimer = 0;
 volatile uint32_t systemMillis = 0;
 char buffer[20];
 volatile uint8_t index, message_ready = 0;
+volatile uint8_t overflow = 0;
 
 
 void timer0_init(void){
@@ -152,18 +153,28 @@ ISR(TIMER0_COMPA_vect) {
 }
 
 ISR(USART_RX_vect){
-    
-    buffer[index] = UDR0;
-    if(buffer[index] == '\n'){
-        message_ready = 1;
-        buffer[index] = '\0';
-        index = 0;
+
+    if(overflow == 1){
+        if(UDR0 =='\n'){
+            overflow = 0;
+            index = 0;
+        }
     }else{
-    index++;
-    }
+        if(index >= 19){
+            overflow = 1;
+        }else{
+           buffer[index] = UDR0;
 
+        if(buffer[index] == '\n'){
+            message_ready = 1;
+            buffer[index] = '\0';
+            index = 0;
+        }else{
+        index++;
+        }
+        }
 }
-
+}
 
 int main(void) {
 
