@@ -1,6 +1,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdio.h>
+#include <string.h>
 
  typedef enum {
     MODE_OFF,
@@ -54,6 +55,24 @@ uint16_t adc_measure(void){
     ADCSRA |= (1 << ADSC); // measure start
     while(ADCSRA & (1 << ADSC));
     return ADC;
+}
+
+void handle_command(char *command){ // pointer on the first element of string since the adress doesnt change
+    if(strcmp(command, "ON") == 0){
+        currentstate = MODE_ON;
+    }
+    else if(strcmp(command, "OFF") == 0){
+        currentstate = MODE_OFF;
+    }
+    else if(strcmp(command, "BREATHING") == 0){
+        currentstate = MODE_BREATHING;
+    }
+    else if(strcmp(command, "STROBE") == 0){
+        currentstate = MODE_STROBE;
+    }
+    else if(strcmp(command, "SLOW") == 0){
+        currentstate = MODE_SLOW;
+    }
 }
 
 /*ISR(INT0_vect){
@@ -238,7 +257,7 @@ int main(void) {
     }
 
     if(message_ready == 1){
-    printf("%s", buffer);
+    handle_command(buffer);
     message_ready = 0;
 }
 
