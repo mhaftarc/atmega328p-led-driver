@@ -2,6 +2,7 @@
 #include <avr/interrupt.h>
 #include <stdio.h>
 #include <string.h>
+#include <avr/wdt.h>
 
  typedef enum {
     MODE_OFF,
@@ -43,12 +44,22 @@ void uart_init(void){
 
 }
 
-void uart_transmit(char data){
-    while(!(UCSR0A & (1 << UDRE0))){
-    }
-    UDR0 = data;
+void watchdog_init(void){
+    WDTCSR |= ((1 << WDE) | (1 << WDCE)); // watchdog enable
+    WDTCSR = ((1 << WDP2) | (1 << WDP1) | (1 << WDE)); // prescaler set to 1s 
+
 }
 
+void uart_transmit(char *data){
+
+    while(*data != '\0') {  // sending each string sign by sign 
+        while(!(UCSR0A & (1 << UDRE0))) {
+        }
+
+        UDR0 = *data;
+        data++;
+    }
+}
 
 
 
@@ -76,8 +87,27 @@ void handle_command(char *command){ // pointer on the first element of string si
     }
 }
 
-/*ISR(INT0_vect){
+void check_reset_cause(void){
+    uint8_t resetCause = MCUSR;
+    MCUSR = 0;
 
+    if(resetCause & (1 << WDRF)){
+        uart_transmit("watchdog reset\n");   
+    }
+    else if(resetCause & (1 << BORF)){
+        uart_transmit("brown out reset\n");   
+    }
+    else if(resetCause & (1 << EXTRF)){
+        uart_transmit("external reset\n");   
+    }
+    else if(resetCause & (1 << PORF)){
+        uart_transmit("power on reset\n");   
+    }
+
+}
+
+/*ISR(INT0_vect){
+`
     if(debounceTimer == 0){
         debounceTimer = 30;
             switch(currentstate){
@@ -198,15 +228,20 @@ int main(void) {
     PCICR |= (1 << PCIE1);
     PCMSK1 |= ((1 << PCINT9) | (1 << PCINT8));
 
+    
+    uart_init();
+    check_reset_cause();
+    watchdog_init();
     adc_init();
     timer0_init();
     timer1_pwm();
-    uart_init();
     sei();
+
     
 
     while (1) {
-         
+        wdt_reset();
+
             switch(currentstate){
                 case MODE_OFF:
                 OCR1A = 0;
@@ -217,6 +252,7 @@ int main(void) {
                 break;
 
                 case MODE_SLOW:{
+
                 static uint32_t lastSwitch = 0;  // used static instead od global variable to prevent messing up variables, static remembers the state in the loop here
                 static uint8_t ledState = 0;
 
@@ -240,6 +276,7 @@ int main(void) {
                 }} break;
 
                 case MODE_BREATHING:{
+
                 static uint16_t brightness = 0;
                 static uint32_t lastUpdate = 0;
                 static uint8_t direction = 0;
