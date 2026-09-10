@@ -19,4 +19,4 @@ void handle_command(char *command){ // pointer on the first element of string si
     else if(strcmp(command, "SLOW") == 0){
         currentstate = MODE_SLOW;
     }
-};
+}

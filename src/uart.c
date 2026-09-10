@@ -3,7 +3,7 @@
 #include <avr/interrupt.h>
 
 static volatile uint8_t overflow = 0;
-static volatile uint8_t index = 0;
+static volatile uint8_t rxIndex = 0;
 volatile uint8_t message_ready = 0;
 char buffer[20];
 
@@ -14,7 +14,7 @@ void uart_init(void){
     UBRR0 = 103; // baud rate
     UCSR0C |= ((1 << UCSZ01) | (1 << UCSZ00)); // 8n1 format
 
-};
+}
 
 
 void uart_transmit(char *data){
@@ -26,28 +26,28 @@ void uart_transmit(char *data){
         UDR0 = *data;
         data++;
     }
-};
+}
 
 ISR(USART_RX_vect){
 
     if(overflow == 1){
         if(UDR0 =='\n'){
             overflow = 0;
-            index = 0;
+            rxIndex = 0;
         }
     }else{
-        if(index >= 19){
+        if(rxIndex >= 19){
             overflow = 1;
         }else{
-           buffer[index] = UDR0;
+           buffer[rxIndex] = UDR0;
 
-        if(buffer[index] == '\n'){
+        if(buffer[rxIndex] == '\n'){
             message_ready = 1;
-            buffer[index] = '\0';
-            index = 0;
+            buffer[rxIndex] = '\0';
+            rxIndex = 0;
         }else{
-        index++;
+        rxIndex++;
         }
         }
 }
-};
+}

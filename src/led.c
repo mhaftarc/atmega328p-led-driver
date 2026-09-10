@@ -1,16 +1,14 @@
 #include "led.h"
 #include <avr/io.h>
+#include "timer.h"
+#include "adc.h"
 
 volatile State_t currentstate = MODE_OFF;
 
 void led_init(void)
 {
-    // pull up rezystory
-//  PORTD |= (1 << PD2);
-// PORTD |= (1 << PD3);
-PORTC |= ((1 << PC0) | (1 << PC1));
 DDRB |= (1 << PB1);
-};
+}
 
 
 void update_led_state(void){
@@ -74,5 +72,5 @@ void update_led_state(void){
                     OCR1A = brightness;
                 }    
             }
-    };
+    }
 }

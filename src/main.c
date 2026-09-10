@@ -1,7 +1,4 @@
-#include <avr/io.h>
 #include <avr/interrupt.h>
-#include <stdio.h>
-#include <string.h>
 #include <avr/wdt.h>
 #include "led.h"
 #include "adc.h"
@@ -20,6 +17,8 @@ watchdog_init();
 adc_init();
 timer0_init();
 timer1_pwm();
+buttons_init();
+led_init();
 sei();
 
     
@@ -34,11 +33,3 @@ while (1) {
 }
 
 }
-
-
-
-
-
-
-
-

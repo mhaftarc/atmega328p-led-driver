@@ -1,13 +1,12 @@
 #include "watchdog.h"
 #include <avr/io.h>
-#include <avr/interrupt.h>
-#include <uart.h>
+#include "uart.h"
 
 void watchdog_init(void){
     WDTCSR |= ((1 << WDE) | (1 << WDCE)); // watchdog enable
     WDTCSR = ((1 << WDP2) | (1 << WDP1) | (1 << WDE)); // prescaler set to 1s 
 
-};
+}
 
 
 void check_reset_cause(void){
@@ -27,4 +26,4 @@ void check_reset_cause(void){
         uart_transmit("power on reset\n");   
     }
 
-};
+}

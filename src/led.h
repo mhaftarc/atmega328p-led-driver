@@ -2,8 +2,6 @@
 #define LED_H
 #include <stdint.h>
 
-void led_init(void);
-
 
 typedef enum {
     MODE_OFF,
@@ -14,8 +12,9 @@ typedef enum {
 } State_t;
 
 extern volatile State_t currentstate;
-extern volatile uint32_t systemMillis;
+
 
 void update_led_state(void);
-uint16_t adc_measure(void);
+void led_init(void);
+
 #endif

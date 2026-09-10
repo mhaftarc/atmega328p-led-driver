@@ -8,23 +8,28 @@
 
 void buttons_init(void)
 {
-    //wejscia i wyjscia
-//  DDRD &= ~(1 << PD3); 
-// DDRD &= ~(1 << PD2);
 DDRC &= ~((1 << PC0) | (1 << PC1));
+PORTC |= ((1 << PC0) | (1 << PC1));
+PCICR |= (1 << PCIE1);
+PCMSK1 |= ((1 << PCINT9) | (1 << PCINT8));
+}
 
-//interupts maski
-//  EICRA |= (1 << ISC11);     //maski dla int0 i int1, ale mam wyłamane piny 1-7 na arduino!
+// interupts masks
+// EICRA |= (1 << ISC11);     // masks for int 0 and int1
 // EICRA |= (1 << ISC01);
 // EIMSK |= (1 << INT0);
 // EIMSK |= (1 << INT1);
-PCICR |= (1 << PCIE1);
-PCMSK1 |= ((1 << PCINT9) | (1 << PCINT8));
-};
+// inputs and outputs
+// DDRD &= ~(1 << PD3); 
+// DDRD &= ~(1 << PD2);
 
 
+// INT0/INT1 originally used here.
+// Arduino pins 1-7 were broken, so buttons were moved
+// to PC0/PC1 and pin-change interrupts (PCINT1) are used.
 
-ISR(PCINT1_vect){  // ta sama logika tylko z rozpoznaniem przyciskow
+
+ISR(PCINT1_vect){ 
     static uint8_t lastPinState = 0xFF;
     uint8_t currentPinState = PINC;
     if(!(currentPinState & (1 << PC0)) && (lastPinState & (1 << PC0))){
@@ -80,7 +85,7 @@ ISR(PCINT1_vect){  // ta sama logika tylko z rozpoznaniem przyciskow
             }
     };
     
-};
+}
 ISR(INT1_vect){
     
     if(debounceTimer == 0){
@@ -88,7 +93,7 @@ ISR(INT1_vect){
         currentstate = MODE_OFF;
     }
 
-};*/
+}*/
 
    
 
