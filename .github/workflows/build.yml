@@ -21,4 +21,4 @@ jobs:
         run: pip install platformio
 
       - name: Build
-        run: pio run
+        run: pio run -e uno
