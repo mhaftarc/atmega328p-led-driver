@@ -30,3 +30,12 @@ ISR(TIMER0_COMPA_vect) {
     }
 }
 
+uint32_t get_systemMillis(void)
+{
+    cli();
+    uint32_t time = 0;
+    time = systemMillis;
+    sei();
+    return time;
+};
+

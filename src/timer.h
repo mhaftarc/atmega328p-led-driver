@@ -9,6 +9,8 @@ extern volatile uint8_t debounceTimer;
 
 void timer0_init(void);
 void timer1_pwm(void);
+uint32_t get_systemMillis(void);
+
 
 
 #endif

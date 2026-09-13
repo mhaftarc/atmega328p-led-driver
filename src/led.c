@@ -26,8 +26,8 @@ void update_led_state(void){
                 static uint32_t lastSwitch = 0;  // used static instead od global variable to prevent messing up variables, static remembers the state in the loop here
                 static uint8_t ledState = 0;
 
-                if(systemMillis - lastSwitch >=500){
-                    lastSwitch = systemMillis;
+                if(get_systemMillis() - lastSwitch >=500){
+                    lastSwitch = get_systemMillis();
                     ledState = !ledState;
 
                     OCR1A = ledState ? adc_measure() : 0;
@@ -38,8 +38,8 @@ void update_led_state(void){
                 static uint32_t lastSwitch = 0;  
                 static uint8_t ledState = 0;
 
-                if(systemMillis - lastSwitch >=50){
-                    lastSwitch = systemMillis;
+                if(get_systemMillis() - lastSwitch >=50){
+                    lastSwitch = get_systemMillis();
                     ledState = !ledState;
 
                     OCR1A = ledState ? adc_measure() : 0;
@@ -50,8 +50,8 @@ void update_led_state(void){
                 static uint16_t brightness = 0;
                 static uint32_t lastUpdate = 0;
                 static uint8_t direction = 0;
-                if(systemMillis - lastUpdate >= 10){
-                    lastUpdate = systemMillis;
+                if(get_systemMillis() - lastUpdate >= 10){
+                    lastUpdate = get_systemMillis();
                     if(direction == 0){
                         if(brightness >= 1018){
                             brightness = 1023;
