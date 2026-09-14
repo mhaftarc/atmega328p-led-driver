@@ -25,11 +25,9 @@ sei();
 while (1) {
     wdt_reset();
     update_led_state();
+    command_process();
 
-    if(message_ready == 1){
-        handle_command(buffer);
-        message_ready = 0;
-    }
+
 }
 
 }

@@ -1,12 +1,14 @@
 #include "uart.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#define BUFFER_SIZE = 64
+#include <stdbool.h>
+#define BUFFER_SIZE 64
 
 
 char ringBuffer[BUFFER_SIZE]; 
 volatile uint8_t writeIndex = 0;
 volatile uint8_t readIndex = 0;
+
 
 
 
@@ -18,7 +20,7 @@ void uart_init(void){
 }
 
 
-void uart_transmit(char *data){
+void uart_transmit(const char *data){
 
     while(*data != '\0') {  // sending each string sign by sign 
         while(!(UCSR0A & (1 << UDRE0))) {
@@ -30,16 +32,18 @@ void uart_transmit(char *data){
 }
 
 
-uint8_t uart_read_byte(){    // i took taking output as param into consideration, but since only main and usr uses it, it isnt neccessary and it is more readable
+bool uart_read_byte(uint8_t *c){    //output as param, the function returns 1 or 0, if it see's the bit, and stores the message under the pointer adress as value
 
     if (readIndex != writeIndex) {
-        uint8_t c = ringBuffer[readIndex];
+        *c = ringBuffer[readIndex];
         readIndex = (readIndex + 1) % BUFFER_SIZE;
-        return c;
+        return true;
+    } else {
+        return false;
     }
 }
 
-}
+
 ISR(USART_RX_vect){
     uint8_t c = UDR0;
     uint8_t next = (writeIndex + 1) % BUFFER_SIZE;
@@ -49,5 +53,3 @@ if (next != readIndex) {
     writeIndex = next;
 }  
 }
-
-

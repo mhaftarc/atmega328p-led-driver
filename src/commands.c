@@ -1,9 +1,14 @@
 #include "commands.h"
 #include "led.h"
 #include <string.h>
+#include "uart.h"
 
 
-void handle_command(char *command){ // pointer on the first element of string since the adress doesnt change
+
+
+
+
+void handle_command(const char *command){ // pointer on the first element of string since the adress doesnt change
     if(strcmp(command, "ON") == 0){
         currentstate = MODE_ON;
     }
@@ -18,5 +23,24 @@ void handle_command(char *command){ // pointer on the first element of string si
     }
     else if(strcmp(command, "SLOW") == 0){
         currentstate = MODE_SLOW;
+    }
+}
+
+
+
+void command_process(void){
+    uint8_t c;
+    static char commandBuffer[20];
+    static uint8_t i = 0;
+
+    if(uart_read_byte(&c)){
+        if(c == '\n'){
+            commandBuffer[i] = '\0';
+            handle_command(commandBuffer);
+            i = 0;
+        }else{
+            commandBuffer[i] = c;
+            i++;
+        }
     }
 }
