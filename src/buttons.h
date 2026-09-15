@@ -3,5 +3,8 @@
 
 void buttons_init(void);
 
+void buttons_tick(void);
+
+
 
 #endif
