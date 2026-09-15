@@ -73,6 +73,18 @@ The original Arduino pins used for the buttons were physically damaged, so I mov
 
 The UART code is implemented, but the Arduino board I used has damaged pins 1-7, so physical UART testing is currently limited.
 
+## Testing
+
+There's a small set of unit tests for the command parsing logic (`handle_command`), running under PlatformIO's `native` environment (so it runs on your PC, not the actual chip). Stuff like ADC/PWM/UART registers obviously can't be unit tested this way since they need real hardware, but the command handling logic is plain C so it can be tested on its own.
+
+To run it:
+
+```bash
+pio test -e native
+```
+
+Also set up GitHub Actions so it builds the firmware and runs these tests automatically on every push.
+
 ## Build
 
 The project can be built with PlatformIO.
@@ -90,3 +102,4 @@ The current build uses approximately:
 - Store settings in EEPROM
 - Add more LED modes
 - Test UART using an external USB-UART adapter
+- Add more unit tests (debounce logic, timing logic in led.c)
