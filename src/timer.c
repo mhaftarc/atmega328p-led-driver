@@ -1,7 +1,7 @@
 #include "timer.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
-
+#include <util/atomic.h>>
 
 volatile uint32_t systemMillis = 0;
 volatile uint8_t debounceTimer = 0;
@@ -32,10 +32,11 @@ ISR(TIMER0_COMPA_vect) {
 
 uint32_t get_systemMillis(void)
 {
-    cli();
-    uint32_t time = 0;
+    uint32_t time;
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
     time = systemMillis;
-    sei();
+    }
     return time;
+    
 };
 
