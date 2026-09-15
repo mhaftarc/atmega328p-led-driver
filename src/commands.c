@@ -24,6 +24,9 @@ void handle_command(const char *command){ // pointer on the first element of str
     else if(strcmp(command, "SLOW") == 0){
         currentstate = MODE_SLOW;
     }
+    else{
+        uart_transmit("Unknown command\n");
+    }
 }
 
 

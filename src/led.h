@@ -2,7 +2,6 @@
 #define LED_H
 #include <stdint.h>
 
-
 typedef enum {
     MODE_OFF,
     MODE_ON,
