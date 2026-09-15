@@ -22,3 +22,6 @@ jobs:
 
       - name: Build
         run: pio run -e uno
+
+      - name: Run unit tests
+        run: pio test -e native
